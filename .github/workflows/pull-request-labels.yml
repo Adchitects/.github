@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+---
+name: Pull Request Labels
+
+on:
+    workflow_call:
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    CI: true
+
+jobs:
+    pull-request-labels:
+        name: Set/Update Pull Requests labels
+        if: ${{ github.repository_owner == 'terminal-nerds' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Set labels based on the configuration file in "./.github/labeler.yml"
+              # https://github.com/actions/labeler
+              uses: actions/labeler@v4
+              if: ${{
+                  github.event.action == 'synchronize' ||
+                  github.event.action == 'opened' ||
+                  github.event.action == 'reopened'
+                  }}
+              with:
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  sync-labels: true
+        timeout-minutes: 3
