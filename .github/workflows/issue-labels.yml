@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+---
+name: Issue labels
+
+on:
+    workflow_call:
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    CI: true
+
+jobs:
+    issue-labels:
+        name: Set/Update labels
+        if: ${{ github.event.issue.closed }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Remove "🔰 good first issue" label when the issue is closed
+              # https://actions-cool.github.io/issues-helper/en-US/base
+              uses: actions-cool/issues-helper@v3
+              with:
+                  # https://actions-cool.github.io/issues-helper/en-US/base/#remove-labels
+                  actions: "remove-labels"
+                  issue-number: ${{ github.event.issue.number }}
+                  labels: "🔰 good first issue"
+                  token: ${{ secrets.GITHUB_TOKEN }}
