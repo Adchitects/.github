@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+---
+name: Changesets
+
+on:
+    workflow_call:
+        inputs:
+            changelogs-path:
+                description: Changelogs path pattern for fixing code format
+                required: true
+                type: string
+        secrets:
+            NPM_TOKEN:
+                description: Token for npmjs.com registry publishing
+                required: true
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    CI: true
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Prevent possible memory leaks by setting limit
+    # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+    NODE_OPTIONS: --max-old-space-size=6144
+    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+jobs:
+    changesets:
+        name: Changesets
+        if: ${{
+            github.ref_name == 'main' &&
+            github.repository_owner == 'terminal-nerds'
+            }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout to ${{ github.repository }} repository
+              # https://github.com/actions/checkout
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.head_ref }}
+
+            - name: Setup the latest pnpm version
+              # https://github.com/pnpm/action-setup
+              uses: pnpm/action-setup@v2.2.2
+              with:
+                  version: latest
+
+            - name: Setup the latest Node.js LTS version
+              # https://github.com/actions/setup-node
+              uses: actions/setup-node@v3
+              with:
+                  cache: pnpm
+                  node-version: lts/*
+
+            - name: Install dependencies
+              # https://pnpm.io/cli/install
+              run: pnpm install --frozen-lockfile
+
+            - name: Download built output
+              # https://github.com/actions/download-artifact
+              uses: actions/download-artifact@v3
+
+            - name: Extract built output
+              # https://github.com/adchitects/.github/blob/main/.github/scripts/extract-built-packages.sh
+              run: >
+                  curl https://raw.githubusercontent.com/adchitects/.github/main/.github/scripts/extract-built-packages.sh
+                  | sh
+            - name: Create changelogs, release, publish with Changesets
+              # https://github.com/changesets/action
+              uses: changesets/action@v1
+              id: changesets
+              with:
+                  commit: "chore(Changesets): 🏷️ Versioning package(s)"
+                  publish: pnpm changeset publish
+                  title: "chore(Changesets): 🎉 Release package(s)"
+                  version: pnpm changeset version
+        timeout-minutes: 5
