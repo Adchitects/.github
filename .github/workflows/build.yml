@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+---
+name: Build & Upload artifacts
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    CI: true
+    # Prevent possible memory leaks by setting limit
+    # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+    NODE_OPTIONS: --max-old-space-size=6144
+
+on:
+    workflow_call:
+        inputs:
+            artifact-name:
+                description: Name of the compressed artifact file
+                required: true
+                type: string
+            artifact-path:
+                description: Path pattern to include in upload
+                required: true
+                type: string
+            artifact-upload:
+                description: Include uploading artifact step
+                required: false
+                type: boolean
+
+            exclude:
+                description: Pattern of paths to exclude
+                default: "{**/*.map,**/node_modules/**}"
+                required: false
+                type: string
+            include:
+                description: Pattern of paths to include
+                required: true
+                type: string
+
+            script-build:
+                description: Executable command script to build the output
+                required: true
+                type: string
+
+jobs:
+    build_job:
+        name: Build job
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout to ${{ github.repository }} repository
+              # https://github.com/actions/checkout
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.head_ref }}
+
+            - name: Setup the latest pnpm version
+              # https://github.com/pnpm/action-setup
+              uses: pnpm/action-setup@v2.2.2
+              with:
+                  version: latest
+
+            - name: Setup the latest Node.js LTS version
+              # https://github.com/actions/setup-node
+              uses: actions/setup-node@v3
+              with:
+                  cache: pnpm
+                  node-version: lts/*
+
+            - name: Execute build task with compression report
+              # https://github.com/preactjs/compressed-size-action
+              uses: preactjs/compressed-size-action@v2
+              with:
+                  build-script: ${{ inputs.script-build }}
+                  exclude: ${{ inputs.exclude }}
+                  pattern: ${{ inputs.include }}
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload built output to GitHub Actions workflow artifacts
+              # https://github.com/actions/upload-artifact
+              uses: actions/upload-artifact@v3
+              if: ${{ inputs.artifact-upload }}
+              with:
+                  if-no-files-found: error
+                  name: ${{ inputs.artifact-name }}
+                  path: ${{ inputs.artifact-path }}
+        timeout-minutes: 5
