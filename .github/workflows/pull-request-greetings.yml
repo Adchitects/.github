@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+---
+name: Greetings
+
+on:
+    workflow_call:
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    CI: true
+
+jobs:
+    greeting:
+        name: Greet first time contributors
+        if: ${{ github.event_name == 'pull_request' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Read the markdown template
+              # https://github.com/juliangruber/read-file-action
+              uses: juliangruber/read-file-action@v1
+              id: template
+              with:
+                  path: "./.github/templates/GREETINGS.md"
+
+            - name: Create a Pull Request comment
+              # https://github.com/actions/first-interaction
+              uses: actions/first-interaction@v1
+              with:
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  pr-message: ${{ steps.template.outputs.content }}
