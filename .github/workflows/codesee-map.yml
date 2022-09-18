@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+---
+name: CodeSee Map
+
+on:
+    push:
+        branches: [main]
+    pull_request_target:
+        types: [opened, synchronize, reopened]
+    workflow_call:
+        secrets:
+            CODESEE_ARCH_DIAG_API_TOKEN:
+                description: Token
+                required: true
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    CI: true
+    # Prevent possible memory leaks by setting limit
+    # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+    NODE_OPTIONS: --max-old-space-size=6144
+
+jobs:
+    test_map_action:
+        name: CodeSee Map
+        if: ${{
+            github.event.action == 'synchronize' ||
+            github.event.action == 'opened' ||
+            github.event.action == 'reopened'
+            }}
+        continue-on-error: true
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout to ${{ github.repository }} repository
+              # https://github.com/actions/checkout
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.head_ref }}
+
+            - name: Detect Languages
+              # https://github.com/Codesee-io/codesee-detect-languages-action
+              uses: Codesee-io/codesee-detect-languages-action@latest
+              id: detect-languages
+
+            - name: Setup the latest pnpm version
+              # https://github.com/pnpm/action-setup
+              uses: pnpm/action-setup@v2.2.2
+              with:
+                  version: latest
+
+            - name: Setup the latest Node.js LTS version
+              # https://github.com/actions/setup-node
+              uses: actions/setup-node@v3
+              if: ${{ fromJSON(steps.detect-languages.outputs.languages).javascript }}
+              with:
+                  cache: pnpm
+                  node-version: lts/*
+
+            - name: Generate Map
+              # https://github.com/Codesee-io/codesee-map-action
+              uses: Codesee-io/codesee-map-action@latest
+              with:
+                  step: map
+                  github_ref: ${{ github.ref }}
+                  languages: ${{ steps.detect-languages.outputs.languages }}
+
+            - name: Upload Map
+              # https://github.com/Codesee-io/codesee-map-action
+              uses: Codesee-io/codesee-map-action@latest
+              with:
+                  step: mapUpload
+                  api_token: ${{ secrets.CODESEE_ARCH_DIAG_API_TOKEN }}
+                  github_ref: ${{ github.ref }}
+
+            - name: Insights
+              # https://github.com/Codesee-io/codesee-map-action
+              uses: Codesee-io/codesee-map-action@latest
+              with:
+                  step: insights
+                  api_token: ${{ secrets.CODESEE_ARCH_DIAG_API_TOKEN }}
+                  github_ref: ${{ github.ref }}
