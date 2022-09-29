@@ -1,0 +1,15 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"assigneesFromCodeOwners": true,
+	"baseBranches": ["main"],
+	"commitMessagePrefix": "chore(Renovate): {{#if isPin}}📌{{else if isRollback}}⬇️{{else if isReplacement}}🏗️{{else if (or isMajor isPatch isSingleVersion)}}⬆️{{/if}} ",
+	"commitMessageTopic": "dependency `{{depName}}`",
+	"commitMessageExtra": "to `v{{#if isMajor}}{{{newMajor}}}{{else}}{{#if isSingleVersion}}{{{newVersion}}}{{else}}{{{newValue}}}{{/if}}{{/if}}`",
+	"dependencyDashboard": true,
+	"extends": ["config:base"],
+	"labels": ["🧩 dependencies"],
+	"reviewersFromCodeOwners": true,
+	"schedule": ["after 10pm and before 5am every weekday", "every sunday"],
+	"stabilityDays": 3,
+	"timezone": "Europe/Warsaw"
+}
