@@ -23,7 +23,7 @@ jobs:
               uses: juliangruber/read-file-action@v1
               id: template
               with:
-                  path: "./.github/templates/greetings.md"
+                  path: "./.github/templates/GREETINGS.md"
 
             - name: Create a Pull Request comment
               # https://github.com/actions/first-interaction
