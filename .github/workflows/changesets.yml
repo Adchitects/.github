@@ -31,7 +31,7 @@ jobs:
         name: Changesets
         if: ${{
             github.ref_name == 'main' &&
-            github.repository_owner == 'terminal-nerds'
+            github.repository_owner == 'adchitects'
             }}
         runs-on: ubuntu-latest
         steps:
