@@ -68,8 +68,8 @@ jobs:
 
             - name: Extract built output
               if: ${{ inputs.download-build }}
-              # https://github.com/terminal-nerds/.github/blob/main/.github/scripts/extract-built-packages.sh
-              run: curl https://raw.githubusercontent.com/terminal-nerds/.github/main/.github/scripts/extract-built-packages.sh | sh
+              # https://github.com/adchitects/.github/blob/main/.github/scripts/extract-built-packages.sh
+              run: curl https://raw.githubusercontent.com/adchitects/.github/main/.github/scripts/extract-built-packages.sh | sh
 
             - name: ${{ inputs.step-name }}
               run: ${{ inputs.run }}

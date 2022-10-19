@@ -15,7 +15,7 @@ env:
 jobs:
     pull-request-labels:
         name: Set/Update Pull Requests labels
-        if: ${{ github.repository_owner == 'terminal-nerds' }}
+        if: ${{ github.repository_owner == 'adchitects' }}
         runs-on: ubuntu-latest
         steps:
             - name: Set labels based on the configuration file in "./.github/labeler.yml"
