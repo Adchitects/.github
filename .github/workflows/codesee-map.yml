@@ -57,11 +57,14 @@ jobs:
               uses: actions/setup-node@v3
               if: ${{ fromJSON(steps.detect-languages.outputs.languages).javascript }}
               with:
-                  cache: pnpm
+                  # NOTE: By my understanding, there's nothing to cache, so it won't work, hence the possible error later
+                  # cache: pnpm
                   node-version: lts/*
               env:
                   # FIXME: Workaround for this issue: https://github.com/actions/setup-node/issues/317
                   FORCE_COLOR: 0
+                  # FIXME: Another workaround for this issue: https://github.com/actions/setup-node/issues/317
+              continue-on-error: true
 
             - name: Generate Map
               # https://github.com/Codesee-io/codesee-map-action
